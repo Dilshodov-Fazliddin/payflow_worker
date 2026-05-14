@@ -21,16 +21,16 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExternalTasClientConfig {
   static final Logger logger = LoggerFactory.getLogger(ExternalTasClientConfig.class);
-  @Value("${camunda.client.base-url}")
+  @Value("${camunda.bpm.client.base-url}")
   private String baseUrl;
 
-  @Value("${camunda.client.worker-id:default-worker}")
+  @Value("${camunda.bpm.client.worker-id}")
   private String workerId;
 
-  @Value("${camunda.client.max-tasks:10}")
+  @Value("${camunda.bpm.client.max-tasks}")
   private int maxTasks;
 
-  @Value("${camunda.client.async-response-timeout:10000}")
+  @Value("${camunda.bpm.client.async-response-timeout}")
   private long asyncResponseTimeout;
 
   private ExternalTaskClient client;
