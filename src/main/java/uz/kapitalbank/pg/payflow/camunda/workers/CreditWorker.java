@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import uz.kapitalbank.pg.payflow.constant.enums.TransferStatus;
 import uz.kapitalbank.pg.payflow.exception.DataNotFoundException;
 import uz.kapitalbank.pg.payflow.exception.TransferCanceledException;
 import uz.kapitalbank.pg.payflow.myclient.builder.ExternalTaskBuilder;
@@ -16,6 +17,7 @@ import uz.kapitalbank.pg.payflow.service.TransferService;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
 
 import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.AMOUNT;
 import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.CREDIT_WORKER;
@@ -51,7 +53,8 @@ public class CreditWorker implements ExternalTaskHandler {
         service.handleBpmnError(task, "CREDIT_ERROR", e.getMessage(), null);
         return;
       }
-      service.complete(task);
+      transferService.changeTransferStatus(transferId, TransferStatus.COMPLETED);
+      service.complete(task, Map.of("CreditPass",true));
       log.info("CREDIT SUCCEEDED: id={}", toAccount);
     } catch (DataNotFoundException e) {
       log.warn("Task {} no longer exists", task.getId());

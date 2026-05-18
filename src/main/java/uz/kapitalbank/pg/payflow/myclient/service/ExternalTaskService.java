@@ -12,6 +12,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,19 +23,27 @@ public class ExternalTaskService {
   private final ObjectMapper mapper;
   private final String baseUrl;
   private final String workerId;
+  private final String authHeader;
 
-  public ExternalTaskService(HttpClient http, ObjectMapper mapper, String baseUrl, String workerId) {
+  public ExternalTaskService(
+    HttpClient http,
+    ObjectMapper mapper,
+    String baseUrl,
+    String workerId
+    ,String username, String password) {
+    String creds = username + ":" + password;
     this.http = http;
     this.mapper = mapper;
     this.baseUrl = baseUrl;
     this.workerId = workerId;
+    this.authHeader = "Basic " + Base64.getEncoder().encodeToString(creds.getBytes(StandardCharsets.UTF_8));
   }
 
   public void extendLock(ExternalTaskBuilder task, long newDuration){
     Map<String, Object> body = new HashMap<>();
     body.put("newDuration", newDuration);
     body.put("workerId", workerId);
-    post("/external-tasks/" + task.getId() + "/extendLock", body);
+    post("/external-task/" + task.getId() + "/extendLock", body);
   }
 
   public void unlock(ExternalTaskBuilder task) {
@@ -52,23 +62,23 @@ public class ExternalTaskService {
     Map<String, Object> body = new HashMap<>();
     body.put("workerId", workerId);
     if (variables != null) {
-      body.put("variables ", variables);
+      body.put("variables", wrapperVariables(variables));
     }
 
     if (localVariables != null) {
-      body.put("localVariables ", wrapperVariables(localVariables));
+      body.put("localVariables", wrapperVariables(localVariables));
     }
     post("/external-task/" + externalTaskBuilder.getId() + "/complete", body);
   }
 
   private Map<String,Map<String,Object>>wrapperVariables(Map<String,Object> vars) {
     Map<String,Map<String,Object>> wrapped = new HashMap<>();
-    if (vars != null) {
+    if (vars == null) {
       return  wrapped;
     }
     vars.forEach((k,v)->{
       Map<String,Object> map = new HashMap<>();
-      map.put("variables", v);
+      map.put("value", v);
       map.put("type",detectType(v));
       wrapped.put(k, map);
     });
@@ -92,6 +102,7 @@ public class ExternalTaskService {
       HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(baseUrl + path))
         .header("Content-Type", "application/json")
+        .header("Authorization",authHeader)
         .POST(HttpRequest.BodyPublishers.ofString(json))
         .build();
       HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
@@ -111,7 +122,7 @@ public class ExternalTaskService {
     body.put("errorMessage", errorMessage);
     body.put("errorDetails", errorDetails);
     body.put("retries", retries);
-    body.put("retryTimeOut", retryTimeOut);
+    body.put("retryTimeout", retryTimeOut);
     post("/external-task/" + task.getId() + "/failure", body);
   }
 

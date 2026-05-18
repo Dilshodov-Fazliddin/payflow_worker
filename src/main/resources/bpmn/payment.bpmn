@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0293o4f" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0293o4f" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
   <bpmn:process id="Process_1dv9moc" name="yes" isExecutable="true">
     <bpmn:callActivity id="Activity_0qfctwt" name="hold" calledElement="Hold">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ao2vq4</bpmn:incoming>
       <bpmn:outgoing>Flow_1rhtmy5</bpmn:outgoing>
     </bpmn:callActivity>
     <bpmn:sequenceFlow id="Flow_1rhtmy5" sourceRef="Activity_0qfctwt" targetRef="Activity_1warjj3" />
     <bpmn:callActivity id="Activity_1warjj3" name="credit" calledElement="Credit">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1rhtmy5</bpmn:incoming>
       <bpmn:outgoing>Flow_1b561n4</bpmn:outgoing>
     </bpmn:callActivity>
@@ -17,6 +24,10 @@
       <bpmn:incoming>Flow_1b561n4</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1b561n4" sourceRef="Activity_1warjj3" targetRef="Event_0yr86m7" />
+    <bpmn:startEvent id="Event_1bh5140">
+      <bpmn:outgoing>Flow_1ao2vq4</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1ao2vq4" sourceRef="Event_1bh5140" targetRef="Activity_0qfctwt" />
     <bpmn:association id="Association_11jepcm" associationDirection="One" sourceRef="Event_03i9zxm" targetRef="Activity_1v6nz1a" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -35,6 +46,9 @@
       <bpmndi:BPMNShape id="Event_0yr86m7_di" bpmnElement="Event_0yr86m7">
         <dc:Bounds x="792" y="72" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1bh5140_di" bpmnElement="Event_1bh5140">
+        <dc:Bounds x="112" y="72" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1ui8bob_di" bpmnElement="Event_03i9zxm">
         <dc:Bounds x="312" y="112" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -42,14 +56,18 @@
         <di:waypoint x="350" y="90" />
         <di:waypoint x="520" y="90" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1b561n4_di" bpmnElement="Flow_1b561n4">
+        <di:waypoint x="620" y="90" />
+        <di:waypoint x="792" y="90" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Association_11jepcm_di" bpmnElement="Association_11jepcm">
         <di:waypoint x="330" y="148" />
         <di:waypoint x="330" y="220" />
         <di:waypoint x="260" y="220" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1b561n4_di" bpmnElement="Flow_1b561n4">
-        <di:waypoint x="620" y="90" />
-        <di:waypoint x="792" y="90" />
+      <bpmndi:BPMNEdge id="Flow_1ao2vq4_di" bpmnElement="Flow_1ao2vq4">
+        <di:waypoint x="148" y="90" />
+        <di:waypoint x="250" y="90" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

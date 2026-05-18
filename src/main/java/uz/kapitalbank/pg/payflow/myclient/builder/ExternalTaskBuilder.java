@@ -1,11 +1,13 @@
 package uz.kapitalbank.pg.payflow.myclient.builder;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,7 @@ public class ExternalTaskBuilder {
   String businessKey;
   String tenantId;
   Integer retries;
-  Long lockExpirationTime;
+  String lockExpirationTime;
   Long priority;
   Map<String, Map<String, Object>> variables = new HashMap<>();
 

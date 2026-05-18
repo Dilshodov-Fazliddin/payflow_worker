@@ -53,11 +53,12 @@ public class CheckTransferFrequencyWorker implements ExternalTaskHandler {
         FRAUD_CHECK_PASSED, result.getDecision().equals(FraudDecision.APPROVED),
         "fraudDecision",        result.getDecision().name(),
         "fraudReason",          result.getReason(),
-        "recentTransferCounts", result.getRecentCount()
+        "recentTransferCounts", result.getRecentCount(),
+        "fraudPassed", true
       ));
 
     } catch (Exception e) {
-      transferService.markAsFailed(Long.valueOf(CamundaConstants.TRANSFER_ID));
+      transferService.markAsFailed(task.getVariable(TRANSFER_ID));
       log.error("FraudCheck failed with technical error", e);
       int retries = task.getRetries() == null ? 3 : task.getRetries() - 1;
       taskService.handleFailure(

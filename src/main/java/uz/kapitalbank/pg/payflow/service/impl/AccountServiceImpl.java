@@ -30,7 +30,6 @@ public class AccountServiceImpl implements AccountService {
     AccountRepository accountRepository;
     AccountMapper accountMapper;
     UserService userService;
-    TransferService transferService;
 
     @Override
     public AccountResponse createAccount(AccountCreateRequest createRequest) {
@@ -54,10 +53,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public boolean checkCurrencyOfTwoAccounts(Long fromAccountId, Long toAccountId, Long transferId) {
-        TransferEntity transfer = transferService.getTransferById(transferId);
         AccountEntity from = getAccountById(fromAccountId);
         AccountEntity to = getAccountById(toAccountId);
-        if ((from.getCurrency().equals(to.getCurrency())) && from.getCurrency().equals(transfer.getCurrency())) {
+        if ((from.getCurrency().equals(to.getCurrency()))) {
             return true;
         }else {
             throw new TransferCanceledException("Currencies are not same");

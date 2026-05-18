@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1nyr1fr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1nyr1fr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
   <bpmn:process id="Process_15ct6m1" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_1thoo7e</bpmn:outgoing>
@@ -8,6 +8,9 @@
     <bpmn:sequenceFlow id="Flow_08wmoqt" sourceRef="Activity_0xqlph5" targetRef="Activity_186jg9b" />
     <bpmn:sequenceFlow id="Flow_0fjuf0y" sourceRef="Activity_186jg9b" targetRef="Activity_1g5clue" />
     <bpmn:callActivity id="Activity_0wj6tpf" name="PAYMENT" calledElement="payment">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_15ctw8a</bpmn:incoming>
       <bpmn:outgoing>Flow_1x9j1lu</bpmn:outgoing>
     </bpmn:callActivity>
@@ -16,16 +19,18 @@
       <bpmn:incoming>Flow_1x9j1lu</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1x9j1lu" sourceRef="Activity_0wj6tpf" targetRef="Event_0s8qkt6" />
-    <bpmn:exclusiveGateway id="Gateway_10ah67e" name="is sucess?">
+    <bpmn:exclusiveGateway id="Gateway_10ah67e" name="is sucess?" default="Flow_17tyxsr">
       <bpmn:incoming>Flow_0ei3oy2</bpmn:incoming>
       <bpmn:outgoing>Flow_15ctw8a</bpmn:outgoing>
       <bpmn:outgoing>Flow_17tyxsr</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_0ei3oy2" sourceRef="Activity_1q4584h" targetRef="Gateway_10ah67e" />
-    <bpmn:sequenceFlow id="Flow_15ctw8a" name="Yes" sourceRef="Gateway_10ah67e" targetRef="Activity_0wj6tpf" />
+    <bpmn:sequenceFlow id="Flow_15ctw8a" name="Yes" sourceRef="Gateway_10ah67e" targetRef="Activity_0wj6tpf">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${fraudPassed}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:endEvent id="Event_07syw4j" name="TRANSFER CANCELED">
       <bpmn:incoming>Flow_17tyxsr</bpmn:incoming>
-      <bpmn:errorEventDefinition id="ErrorEventDefinition_0jb118m" />
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0jb118m" errorRef="Error_TransferCanceled" />
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_17tyxsr" name="No" sourceRef="Gateway_10ah67e" targetRef="Event_07syw4j" />
     <bpmn:subProcess id="Activity_04muu9y" name="Transfer Canceled Exception" triggeredByEvent="true">

@@ -16,6 +16,7 @@ import uz.kapitalbank.pg.payflow.service.TransferService;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
 
 import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.AMOUNT;
 import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.DEBIT_WORKER;
@@ -52,7 +53,7 @@ public class DebitWorker implements ExternalTaskHandler {
         service.handleBpmnError(task, "DEBIT_ERROR", ex.getMessage(), null);
         return;
       }
-      service.complete(task);
+      service.complete(task, Map.of("HoldCheck", true));
       log.info("DEBIT SUCCESSFULLY INITIATED: fromId {} ", fromAccount);
     } catch (DataNotFoundException ex) {
       log.warn("Task {} no longer exists", task.getId());

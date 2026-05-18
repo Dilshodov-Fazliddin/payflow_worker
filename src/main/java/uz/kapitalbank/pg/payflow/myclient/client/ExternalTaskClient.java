@@ -61,7 +61,7 @@ public class ExternalTaskClient {
     this.mapper = new ObjectMapper();
     this.authHeader= "Basic " + Base64.getEncoder()
       .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
-    this.service = new ExternalTaskService(http, mapper, baseUrl, workerId);
+    this.service = new ExternalTaskService(http, mapper, baseUrl, workerId,username,password);
   }
 
   public void subscribe(String topicName, long lockDuration, ExternalTaskHandler handler) {

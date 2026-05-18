@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_08b6hua" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
-  <bpmn:process id="Process_1vvfe9z" isExecutable="true">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_08b6hua" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.45.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:process id="Credit" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0qa8lmp</bpmn:outgoing>
     </bpmn:startEvent>
@@ -13,7 +13,7 @@
     <bpmn:boundaryEvent id="Event_0qdx2e0" attachedToRef="Activity_1i908al">
       <bpmn:compensateEventDefinition id="CompensateEventDefinition_0yavqo2" />
     </bpmn:boundaryEvent>
-    <bpmn:exclusiveGateway id="Gateway_0423wj5" name="is success?">
+    <bpmn:exclusiveGateway id="Gateway_0423wj5" name="is success?" default="Flow_0awljcn">
       <bpmn:incoming>Flow_0glec65</bpmn:incoming>
       <bpmn:outgoing>Flow_10dl1rb</bpmn:outgoing>
       <bpmn:outgoing>Flow_0awljcn</bpmn:outgoing>
@@ -22,16 +22,30 @@
     <bpmn:endEvent id="Event_0h8l07f">
       <bpmn:incoming>Flow_10dl1rb</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_10dl1rb" name="yes" sourceRef="Gateway_0423wj5" targetRef="Event_0h8l07f" />
+    <bpmn:sequenceFlow id="Flow_10dl1rb" name="yes" sourceRef="Gateway_0423wj5" targetRef="Event_0h8l07f">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${CreditPass}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:endEvent id="Event_19xqo21">
       <bpmn:incoming>Flow_0awljcn</bpmn:incoming>
-      <bpmn:errorEventDefinition id="ErrorEventDefinition_07hlzph" />
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_07hlzph" errorRef="Error_0vib56t" />
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_0awljcn" name="No" sourceRef="Gateway_0423wj5" targetRef="Event_19xqo21" />
+    <bpmn:subProcess id="Activity_043xb11" name="Transfer Canceled Exception" triggeredByEvent="true">
+      <bpmn:startEvent id="Event_1tflkrm">
+        <bpmn:outgoing>Flow_0c7pr3a</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrorEventDefinition_1q77dfg" errorRef="Error_0vib56t" />
+      </bpmn:startEvent>
+      <bpmn:endEvent id="Event_1unzwzn">
+        <bpmn:incoming>Flow_0c7pr3a</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_0c7pr3a" sourceRef="Event_1tflkrm" targetRef="Event_1unzwzn" />
+    </bpmn:subProcess>
     <bpmn:association id="Association_13w1ixg" associationDirection="One" sourceRef="Event_0qdx2e0" targetRef="Activity_0k3fcwg" />
   </bpmn:process>
+  <bpmn:error id="Error_0p61r0z" name="Error_1pg69vr" />
+  <bpmn:error id="Error_0vib56t" name="TransferCanceledException" errorCode="TRANSFER_CANCELED" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1vvfe9z">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Credit">
       <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
         <dc:Bounds x="182" y="112" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -46,7 +60,7 @@
       <bpmndi:BPMNShape id="Gateway_0423wj5_di" bpmnElement="Gateway_0423wj5" isMarkerVisible="true">
         <dc:Bounds x="535" y="105" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="531" y="81" width="58" height="14" />
+          <dc:Bounds x="532" y="81" width="57" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0h8l07f_di" bpmnElement="Event_0h8l07f">
@@ -55,6 +69,20 @@
       <bpmndi:BPMNShape id="Event_19xqo21_di" bpmnElement="Event_19xqo21">
         <dc:Bounds x="542" y="222" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0bel6hq" bpmnElement="Activity_043xb11" isExpanded="true">
+        <dc:Bounds x="603" y="360" width="255" height="160" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0xizff0" bpmnElement="Event_1tflkrm">
+        <dc:Bounds x="643" y="422" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1ey5ou2" bpmnElement="Event_1unzwzn">
+        <dc:Bounds x="775" y="422" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_0pueqso" bpmnElement="Flow_0c7pr3a">
+        <di:waypoint x="679" y="440" />
+        <di:waypoint x="775" y="440" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Event_0qdx2e0_di" bpmnElement="Event_0qdx2e0">
         <dc:Bounds x="392" y="152" width="36" height="36" />
       </bpmndi:BPMNShape>
