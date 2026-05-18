@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants;
@@ -19,62 +18,58 @@ import uz.kapitalbank.pg.payflow.service.TransferService;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.*;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.ROLLBACK_WORKER;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.TRANSFER_ID;
 
-@Component
-@ExternalTaskSubscription(
-  topicName = CHECK_DAILY_LIMIT_TOPIC,
-  lockDuration = 60000,
-  variableNames = {FROM_ACCOUNT, AMOUNT}
-)
-@RequiredArgsConstructor
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class CheckUserDailyLimitWorker implements ExternalTaskHandler {
+@Component
+@RequiredArgsConstructor
+@ExternalTaskSubscription(
+  topicName = ROLLBACK_WORKER,
+  lockDuration = 30_000L,
+  variableNames = {TRANSFER_ID}
+)
+@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+public class RollbackWorker implements ExternalTaskHandler {
 
   TransferService transferService;
 
   @Override
-  public void execute(ExternalTaskBuilder task, ExternalTaskService taskService) {
+  public void execute(ExternalTaskBuilder task, ExternalTaskService service) throws Exception {
     MDC.put("processInstanceId", task.getProcessInstanceId());
-    log.info("DailyLimit task received: id={}", task.getId());
+    log.info("FraudCheck task received: id={}", task.getId());
 
     try {
-      Long amount = task.getVariable(AMOUNT);
-      Long fromAccount = task.getVariable(FROM_ACCOUNT);
-
+      Long transfer = task.getVariable(TRANSFER_ID);
       try {
-        transferService.checkAccountLimit(fromAccount, amount);
+        transferService.rollBack(transfer);
       } catch (TransferCanceledException ex) {
-        log.warn("Daily limit exceeded: account={}, amount={}", fromAccount, amount);
-        taskService.handleBpmnError(task, "DAILY_LIMIT_EXCEEDED", ex.getMessage(),null);
+        log.warn("We can't initialize your roll back transferId {}", transfer);
+        service.handleBpmnError(task, "ROLLBACK_ERROR", ex.getMessage(), null);
         return;
       }
-      taskService.complete(task);
-      log.info("DailyLimit check passed");
-
-    } catch (DataNotFoundException nfe) {
-      log.warn("Task {} no longer exists, skipping", task.getId());
+      service.complete(task);
+      log.info("ROLLBACK task completed: id={}", task.getId());
+    } catch (DataNotFoundException ex) {
+      log.warn("Task {} no longer exists", task.getId());
     } catch (Exception ex) {
-      transferService.markAsFailed(Long.valueOf(CamundaConstants.TRANSFER_ID));
-      log.error("DailyLimit failed with technical error", ex);
+      transferService.markAsFailed(task.getVariable(TRANSFER_ID));
       int retries = task.getRetries() == null ? 3 : task.getRetries() - 1;
       try {
-        taskService.handleFailure(
+        service.handleFailure(
           task,
           ex.getMessage(),
           stackTraceToString(ex),
           retries,
           60_000L
         );
-      } catch (DataNotFoundException nfe) {
-        log.warn("Could not report failure — task gone");
+      }catch (DataNotFoundException ex2) {
+        log.warn("Could not report failure — task gone {}", task.getId());
       }
-    } finally {
+    }finally {
       MDC.clear();
     }
   }
-
   private String stackTraceToString(Throwable t) {
     StringWriter sw = new StringWriter();
     t.printStackTrace(new PrintWriter(sw));

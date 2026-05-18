@@ -4,5 +4,6 @@ public enum TransferStatus {
     STARTED,
     COMPLETED,
     FAILED,
-    WAITING
+    WAITING,
+    COMPENSATED
 }

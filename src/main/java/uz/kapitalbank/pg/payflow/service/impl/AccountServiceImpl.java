@@ -1,9 +1,11 @@
 package uz.kapitalbank.pg.payflow.service.impl;
 
 
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uz.kapitalbank.pg.payflow.constant.enums.AccountStatus;
 import uz.kapitalbank.pg.payflow.dto.request.AccountCreateRequest;
@@ -19,6 +21,7 @@ import uz.kapitalbank.pg.payflow.service.AccountService;
 import uz.kapitalbank.pg.payflow.service.TransferService;
 import uz.kapitalbank.pg.payflow.service.UserService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
@@ -40,7 +43,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public boolean balanceChecker(Long fromAccountId, Long amount)  {
-        AccountEntity accountEntity = accountRepository.findById(fromAccountId).orElseThrow();
+        AccountEntity accountEntity = getAccountById(fromAccountId);
 
         if (accountEntity.getBalance() == null || amount == null) {
             return false;
@@ -52,8 +55,8 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public boolean checkCurrencyOfTwoAccounts(Long fromAccountId, Long toAccountId, Long transferId) {
         TransferEntity transfer = transferService.getTransferById(transferId);
-        AccountEntity from = accountRepository.findById(fromAccountId).orElseThrow();
-        AccountEntity to = accountRepository.findById(toAccountId).orElseThrow();
+        AccountEntity from = getAccountById(fromAccountId);
+        AccountEntity to = getAccountById(toAccountId);
         if ((from.getCurrency().equals(to.getCurrency())) && from.getCurrency().equals(transfer.getCurrency())) {
             return true;
         }else {
@@ -67,7 +70,37 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findById(id).orElseThrow(()->new DataNotFoundException("Account not found"));
     }
 
+    @Override
+    @Transactional
+    public void debitAccount(Long fromAccount, Long amount) {
+            AccountEntity account = getAccountById(fromAccount);
+            account.setBalance(account.getBalance() - amount);
+            log.info("Account debit successful id: {}", account.getId());
+    }
 
+    @Override
+    @Transactional
+    public void creditAccount(Long toAccount, Long amount) {
+        AccountEntity account = getAccountById(toAccount);
+        account.setBalance(account.getBalance() + amount);
+        log.info("Account credit successful id: {}", account.getId());
+    }
 
+    @Override
+    @Transactional
+    public void setDailyLimit(Long fromAccount, Long amount) {
+        AccountEntity account = getAccountById(fromAccount);
+        account.setDailyLimitUsed(account.getDailyLimitUsed() + amount);
+        log.info("Account set daily limit successful id: {}", account.getId());
+    }
+
+    @Override
+    @Transactional
+    public void rollBackAccount(Long fromAccount, Long amount) {
+        AccountEntity account = getAccountById(fromAccount);
+        account.setDailyLimitUsed(account.getDailyLimitUsed() - amount);
+        account.setBalance(account.getBalance() + amount);
+        log.info("Account roll back successful id: {}", account.getId());
+    }
 
 }

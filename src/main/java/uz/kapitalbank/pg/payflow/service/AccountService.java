@@ -11,6 +11,12 @@ public interface AccountService {
 
     boolean checkCurrencyOfTwoAccounts(Long fromAccountId, Long toAccountId, Long transferId);
 
-
     AccountEntity getAccountById(Long id);
+
+    void debitAccount(Long fromAccount, Long amount);
+
+    void creditAccount(Long toAccount, Long amount);
+    void setDailyLimit(Long fromAccount, Long amount);
+
+    void rollBackAccount(Long fromAccount, Long amount);
 }

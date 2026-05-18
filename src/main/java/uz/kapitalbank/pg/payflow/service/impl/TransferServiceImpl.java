@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.kapitalbank.pg.payflow.constant.enums.TransferStatus;
 import uz.kapitalbank.pg.payflow.dto.request.TransferCreateRequest;
 import uz.kapitalbank.pg.payflow.dto.response.TransferResponse;
 import uz.kapitalbank.pg.payflow.entity.AccountEntity;
@@ -18,13 +19,16 @@ import uz.kapitalbank.pg.payflow.mapper.TransferMapper;
 import uz.kapitalbank.pg.payflow.repository.AccountRepository;
 import uz.kapitalbank.pg.payflow.repository.TransferRepository;
 import uz.kapitalbank.pg.payflow.repository.UserRepository;
+import uz.kapitalbank.pg.payflow.service.AccountService;
 import uz.kapitalbank.pg.payflow.service.CamundaStartTransferProcess;
 import uz.kapitalbank.pg.payflow.service.TransferService;
+import uz.kapitalbank.pg.payflow.service.UserService;
 
 import java.time.LocalDateTime;
 
-import static uz.kapitalbank.pg.payflow.constant.enums.TransferStatus.COMPLETED;
+import static uz.kapitalbank.pg.payflow.constant.enums.TransferStatus.COMPENSATED;
 import static uz.kapitalbank.pg.payflow.constant.enums.TransferStatus.FAILED;
+import static uz.kapitalbank.pg.payflow.constant.enums.TransferStatus.WAITING;
 
 
 @Slf4j
@@ -34,20 +38,18 @@ import static uz.kapitalbank.pg.payflow.constant.enums.TransferStatus.FAILED;
 public class TransferServiceImpl implements TransferService {
 
   TransferRepository transferRepository;
-  AccountRepository accountRepository;
-  UserRepository userRepository;
+  AccountService accountService;
+  UserService userService;
   TransferMapper transferMapper;
   CamundaStartTransferProcess camundaStartTransferProcess;
 
   @Override
   public TransferResponse transferCreate(TransferCreateRequest transferCreateRequest) {
-
-
     TransferEntity transfer = transferMapper.toEntity(transferCreateRequest);
     transfer = transferRepository.save(transfer);
 
-    UserEntity fromUser = userRepository.findById(transferCreateRequest.getFromUserId()).orElseThrow(() -> new DataNotFoundException("From User not found"));
-    UserEntity toUser = userRepository.findById(transferCreateRequest.getToUserId()).orElseThrow(() -> new DataNotFoundException("To User not found"));
+    UserEntity fromUser = userService.findByUserId(transferCreateRequest.getFromUserId());
+    UserEntity toUser = userService.findByUserId(transferCreateRequest.getToUserId());
 
     transfer.setFromAccount(fromUser);
     transfer.setToAccount(toUser);
@@ -60,49 +62,17 @@ public class TransferServiceImpl implements TransferService {
 
   @Override
   public void markAsFailed(Long transferId) {
-    TransferEntity transfer = transferRepository.findById(transferId)
-      .orElseThrow(() -> new DataNotFoundException("Transfer not found"));
-
+    TransferEntity transfer = getTransferById(transferId);
 
     transfer.setCompletedAt(LocalDateTime.now());
     transfer.setTransferStatus(FAILED);
     transferRepository.save(transfer);
   }
 
-  @Override
-  @Transactional
-  public void debitAndCredit(Long transferId,String processInstanceId) {
-
-    TransferEntity transfer = transferRepository
-      .findById(transferId)
-      .orElseThrow(()-> new DataNotFoundException("Transfer not found"));
-
-    AccountEntity fromAccount = accountRepository
-      .findById(transfer.getFromAccount().getId())
-      .orElseThrow(() -> new DataNotFoundException("Account not found wit id: " + transfer.getFromAccount().getId()));
-
-    AccountEntity toAccount = accountRepository
-      .findById(transfer.getToAccount().getId())
-      .orElseThrow(() -> new DataNotFoundException("Account not found wit id: " + transfer.getToAccount().getId()));
-
-
-    log.info("Transfer from {} to {} started", fromAccount.getId(), toAccount.getId());
-
-    Long amount = transfer.getAmount();
-
-    fromAccount.setBalance(fromAccount.getBalance() - amount);
-    toAccount.setBalance(toAccount.getBalance() + amount);
-
-    fromAccount.setDailyLimitUsed(fromAccount.getDailyLimitUsed() + amount);
-    transfer.setProcessInstanceId(processInstanceId);
-    transfer.setTransferStatus(COMPLETED);
-    transfer.setCompletedAt(LocalDateTime.now());
-  }
-
 
   @Override
   public Boolean checkAccountLimit(Long fromAccount, Long amount) {
-    AccountEntity accountEntity = accountRepository.findById(fromAccount).orElseThrow(() -> new DataNotFoundException("From Account not found"));
+    AccountEntity accountEntity = accountService.getAccountById(fromAccount);
 
     long transferAmount = accountEntity.getDailyLimitUsed() + amount;
     if (!(transferAmount > accountEntity.getDailyLimitMax())){
@@ -115,5 +85,54 @@ public class TransferServiceImpl implements TransferService {
   @Override
   public TransferEntity getTransferById(Long id) {
     return transferRepository.findById(id).orElseThrow(() -> new DataNotFoundException("Transfer not found"));
+  }
+
+  @Override
+  public void debitAccount(Long fromAccount, Long amount,Long transferId) {
+    try {
+      accountService.debitAccount(fromAccount, amount);
+      accountService.setDailyLimit(fromAccount, amount);
+      changeTransferStatus(transferId, WAITING);
+    }catch (Exception e){
+      changeTransferStatus(transferId, TransferStatus.FAILED);
+      throw new TransferCanceledException("Transfer not allowed");
+    }
+  }
+
+  @Override
+  public void changeTransferStatus(Long transferId, TransferStatus transferStatus) {
+    TransferEntity transfer = getTransferById(transferId);
+    transfer.setTransferStatus(transferStatus);
+    transferRepository.save(transfer);
+  }
+
+  @Override
+  @Transactional
+  public void credit(Long toAccount, Long amount, Long transferId) {
+    try {
+      accountService.creditAccount(toAccount, amount);
+      TransferEntity transferById = getTransferById(transferId);
+      transferById.setCompletedAt(LocalDateTime.now());
+    }catch (Exception e){
+      changeTransferStatus(transferId, TransferStatus.FAILED);
+      throw new TransferCanceledException("Transfer not allowed");
+    }
+  }
+
+  @Override
+  @Transactional
+  public void rollBack(Long transferId) {
+    TransferEntity transfer = getTransferById(transferId);
+
+    if (transfer.getTransferStatus() == COMPENSATED ||  transfer.getTransferStatus() == FAILED) {
+      log.info("Already rolled back transferId {}", transferId);
+      return;
+    }
+    try {
+      accountService.rollBackAccount(transfer.getFromAccount().getId(), transfer.getAmount());
+      changeTransferStatus(transferId, COMPENSATED);
+    }catch (Exception e){
+      changeTransferStatus(transferId, TransferStatus.FAILED);
+    }
   }
 }

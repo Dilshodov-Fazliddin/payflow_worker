@@ -4,10 +4,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants;
 import uz.kapitalbank.pg.payflow.exception.DataNotFoundException;
 import uz.kapitalbank.pg.payflow.exception.TransferCanceledException;
 import uz.kapitalbank.pg.payflow.myclient.builder.ExternalTaskBuilder;
@@ -19,58 +17,60 @@ import uz.kapitalbank.pg.payflow.service.TransferService;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.*;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.AMOUNT;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.DEBIT_WORKER;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.FROM_ACCOUNT;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.TRANSFER_ID;
 
 @Component
-@ExternalTaskSubscription(
-  topicName = CHECK_DAILY_LIMIT_TOPIC,
-  lockDuration = 60000,
-  variableNames = {FROM_ACCOUNT, AMOUNT}
-)
 @RequiredArgsConstructor
+@ExternalTaskSubscription(
+  topicName = DEBIT_WORKER,
+  lockDuration = 30000,
+  variableNames = {FROM_ACCOUNT, AMOUNT,TRANSFER_ID}
+)
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class CheckUserDailyLimitWorker implements ExternalTaskHandler {
-
+public class DebitWorker implements ExternalTaskHandler {
   TransferService transferService;
 
+
   @Override
-  public void execute(ExternalTaskBuilder task, ExternalTaskService taskService) {
+  public void execute(ExternalTaskBuilder task, ExternalTaskService service) throws Exception {
     MDC.put("processInstanceId", task.getProcessInstanceId());
-    log.info("DailyLimit task received: id={}", task.getId());
+    log.info("FraudCheck task received: id={}", task.getId());
 
     try {
-      Long amount = task.getVariable(AMOUNT);
       Long fromAccount = task.getVariable(FROM_ACCOUNT);
+      Long amount = task.getVariable(AMOUNT);
+      Long transferId = task.getVariable(TRANSFER_ID);
 
       try {
-        transferService.checkAccountLimit(fromAccount, amount);
+        transferService.debitAccount(fromAccount, amount, transferId);
       } catch (TransferCanceledException ex) {
-        log.warn("Daily limit exceeded: account={}, amount={}", fromAccount, amount);
-        taskService.handleBpmnError(task, "DAILY_LIMIT_EXCEEDED", ex.getMessage(),null);
+        log.warn("We can't initialize your transaction: fromId {}", fromAccount);
+        service.handleBpmnError(task, "DEBIT_ERROR", ex.getMessage(), null);
         return;
       }
-      taskService.complete(task);
-      log.info("DailyLimit check passed");
-
-    } catch (DataNotFoundException nfe) {
-      log.warn("Task {} no longer exists, skipping", task.getId());
+      service.complete(task);
+      log.info("DEBIT SUCCESSFULLY INITIATED: fromId {} ", fromAccount);
+    } catch (DataNotFoundException ex) {
+      log.warn("Task {} no longer exists", task.getId());
     } catch (Exception ex) {
-      transferService.markAsFailed(Long.valueOf(CamundaConstants.TRANSFER_ID));
-      log.error("DailyLimit failed with technical error", ex);
+      transferService.markAsFailed(task.getVariable(TRANSFER_ID));
       int retries = task.getRetries() == null ? 3 : task.getRetries() - 1;
       try {
-        taskService.handleFailure(
+        service.handleFailure(
           task,
           ex.getMessage(),
           stackTraceToString(ex),
           retries,
           60_000L
         );
-      } catch (DataNotFoundException nfe) {
+      }catch (DataNotFoundException nfe) {
         log.warn("Could not report failure — task gone");
       }
-    } finally {
+    }finally {
       MDC.clear();
     }
   }

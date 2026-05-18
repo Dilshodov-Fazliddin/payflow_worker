@@ -6,10 +6,13 @@ public class CamundaConstants {
   public static final String CHECK_DAILY_LIMIT_TOPIC = "limit-check";
   public static final String CHECK_FREQUENCY = "frequency-check";
 
+  public static final String DEBIT_WORKER = "debit";
+  public static final String CREDIT_WORKER = "credit";
 
 
 
-  public static final String DEBIT_AND_CREDIT = "debit-and-credit";
+  public static final String ROLLBACK_WORKER = "rollback";
+
 
 
   public static final String FROM_ACCOUNT ="fromAccount";
