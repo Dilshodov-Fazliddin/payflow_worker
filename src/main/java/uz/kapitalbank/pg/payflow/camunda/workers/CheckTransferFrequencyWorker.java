@@ -25,7 +25,7 @@ import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.*;
 
 @Component
 @ExternalTaskSubscription(
-  topicName = CHECK_FRAUD_TOPIC,
+  topicName = CHECK_FREQUENCY,
   lockDuration = 30000,
   variableNames = {FROM_ACCOUNT, AMOUNT, TRANSFER_ID}
 )

@@ -4,7 +4,7 @@ public class CamundaConstants {
   public static final String CHECK_ACCOUNT_TOPIC = "account-check";
   public static final String CHECK_AMOUNT_TOPIC = "amount-check";
   public static final String CHECK_DAILY_LIMIT_TOPIC = "limit-check";
-  public static final String CHECK_FRAUD_TOPIC = "fraud-check";
+  public static final String CHECK_FREQUENCY = "frequency-check";
 
 
 

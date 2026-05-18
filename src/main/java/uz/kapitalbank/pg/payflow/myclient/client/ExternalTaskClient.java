@@ -11,9 +11,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +32,12 @@ public class ExternalTaskClient {
   private final String workerId;
   private final int maxTasks;
   private final long asyncResponseTimeout;
-
+  private final String authHeader;
   private final HttpClient http;
   private final ObjectMapper mapper;
   private final ExternalTaskService service;
+  private final String username;
+  private  final String password;
 
   private final Map<String, HandlerEntry> handlers = new ConcurrentHashMap<>();
   private final AtomicBoolean running = new AtomicBoolean(false);
@@ -44,15 +48,19 @@ public class ExternalTaskClient {
   public ExternalTaskClient(String baseUrl,
                             String workerId,
                             int maxTasks,
-                            long asyncResponseTimeout) {
+                            long asyncResponseTimeout, String authHeader, String username, String password) {
     this.baseUrl = baseUrl;
     this.workerId = workerId;
     this.maxTasks = maxTasks;
     this.asyncResponseTimeout = asyncResponseTimeout;
+    this.username = username;
+    this.password = password;
     this.http = HttpClient.newBuilder()
       .connectTimeout(Duration.ofSeconds(10))
       .build();
     this.mapper = new ObjectMapper();
+    this.authHeader= "Basic " + Base64.getEncoder()
+      .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
     this.service = new ExternalTaskService(http, mapper, baseUrl, workerId);
   }
 
@@ -135,6 +143,7 @@ public class ExternalTaskClient {
     HttpRequest req = HttpRequest.newBuilder()
       .uri(URI.create(baseUrl + "/external-task/fetchAndLock"))
       .header("Content-Type", "application/json")
+      .header("Authorization", authHeader)          // <-- вот это
       .timeout(Duration.ofMillis(asyncResponseTimeout + 5000))
       .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
       .build();

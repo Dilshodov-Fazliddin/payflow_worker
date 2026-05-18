@@ -32,11 +32,16 @@ public class ExternalTasClientConfig {
 
   @Value("${camunda.bpm.client.async-response-timeout}")
   private long asyncResponseTimeout;
+  @Value("${camunda.bpm.client.basic-auth.username}")
+  private String username;
+  @Value("${camunda.engine.password}")
+  private String password;
+  private String authHeader;
 
   private ExternalTaskClient client;
   @Bean
   public ExternalTaskClient externalTaskClient(ApplicationContext context) {
-    client = new ExternalTaskClient(baseUrl, workerId, maxTasks, asyncResponseTimeout);
+    client = new ExternalTaskClient(baseUrl, workerId, maxTasks, asyncResponseTimeout,authHeader,username,password);
 
     Map<String, Object> beans = context.getBeansWithAnnotation(ExternalTaskSubscription.class);
     for (Object bean : beans.values()) {
