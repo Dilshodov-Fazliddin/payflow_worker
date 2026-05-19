@@ -64,10 +64,6 @@ public class ExternalTaskClient {
     this.service = new ExternalTaskService(http, mapper, baseUrl, workerId,username,password);
   }
 
-  public void subscribe(String topicName, long lockDuration, ExternalTaskHandler handler) {
-    subscribe(topicName, lockDuration, null, handler);
-  }
-
   public void subscribe(String topicName,
                         long lockDuration,
                         String[] variableNames,
