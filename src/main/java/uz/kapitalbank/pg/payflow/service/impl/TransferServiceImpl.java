@@ -75,9 +75,9 @@ public class TransferServiceImpl implements TransferService {
     AccountEntity accountEntity = accountService.getAccountById(fromAccount);
 
     long transferAmount = accountEntity.getDailyLimitUsed() + amount;
-    if (!(transferAmount > accountEntity.getDailyLimitMax())){
+    if (!(transferAmount > accountEntity.getDailyLimitMax())) {
       return true;
-    }else{
+    } else {
       throw new TransferCanceledException("Transfer limit not allowed");
     }
   }
@@ -88,12 +88,12 @@ public class TransferServiceImpl implements TransferService {
   }
 
   @Override
-  public void debitAccount(Long fromAccount, Long amount,Long transferId) {
+  public void debitAccount(Long fromAccount, Long amount, Long transferId) {
     try {
       accountService.debitAccount(fromAccount, amount);
       accountService.setDailyLimit(fromAccount, amount);
       changeTransferStatus(transferId, WAITING);
-    }catch (Exception e){
+    } catch (Exception e) {
       changeTransferStatus(transferId, TransferStatus.FAILED);
       throw new TransferCanceledException("Transfer not allowed");
     }
@@ -113,7 +113,7 @@ public class TransferServiceImpl implements TransferService {
       accountService.creditAccount(toAccount, amount);
       TransferEntity transferById = getTransferById(transferId);
       transferById.setCompletedAt(LocalDateTime.now());
-    }catch (Exception e){
+    } catch (Exception e) {
       changeTransferStatus(transferId, TransferStatus.FAILED);
       throw new TransferCanceledException("Transfer not allowed");
     }
@@ -124,14 +124,14 @@ public class TransferServiceImpl implements TransferService {
   public void rollBack(Long transferId) {
     TransferEntity transfer = getTransferById(transferId);
 
-    if (transfer.getTransferStatus() == COMPENSATED ||  transfer.getTransferStatus() == FAILED) {
+    if (transfer.getTransferStatus() == COMPENSATED || transfer.getTransferStatus() == FAILED) {
       log.info("Already rolled back transferId {}", transferId);
       return;
     }
     try {
       accountService.rollBackAccount(transfer.getFromAccount().getId(), transfer.getAmount());
       changeTransferStatus(transferId, COMPENSATED);
-    }catch (Exception e){
+    } catch (Exception e) {
       changeTransferStatus(transferId, TransferStatus.FAILED);
     }
   }

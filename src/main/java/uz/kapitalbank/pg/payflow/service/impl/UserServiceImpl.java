@@ -12,14 +12,14 @@ import uz.kapitalbank.pg.payflow.service.UserService;
 
 @RequiredArgsConstructor
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
 
-    UserRepository userRepository;
+  UserRepository userRepository;
 
-    @Override
-    public UserEntity findByUserId(Long userId) {
-        return userRepository
-                .findById(userId).orElseThrow(()-> new DataNotFoundException("User not found with id:" + userId));
-    }
+  @Override
+  public UserEntity findByUserId(Long userId) {
+    return userRepository
+      .findById(userId).orElseThrow(() -> new DataNotFoundException("User not found with id:" + userId));
+  }
 }

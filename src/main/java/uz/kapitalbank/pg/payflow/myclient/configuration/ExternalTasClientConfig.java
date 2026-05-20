@@ -39,9 +39,10 @@ public class ExternalTasClientConfig {
   private String authHeader;
 
   private ExternalTaskClient client;
+
   @Bean
   public ExternalTaskClient externalTaskClient(ApplicationContext context) {
-    client = new ExternalTaskClient(baseUrl, workerId, maxTasks, asyncResponseTimeout,authHeader,username,password);
+    client = new ExternalTaskClient(baseUrl, workerId, maxTasks, asyncResponseTimeout, authHeader, username, password);
 
     Map<String, Object> beans = context.getBeansWithAnnotation(ExternalTaskSubscription.class);
     for (Object bean : beans.values()) {

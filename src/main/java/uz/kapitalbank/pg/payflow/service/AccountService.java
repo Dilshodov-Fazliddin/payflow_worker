@@ -5,18 +5,19 @@ import uz.kapitalbank.pg.payflow.dto.response.AccountResponse;
 import uz.kapitalbank.pg.payflow.entity.AccountEntity;
 
 public interface AccountService {
-    AccountResponse createAccount(AccountCreateRequest createRequest);
+  AccountResponse createAccount(AccountCreateRequest createRequest);
 
-    boolean balanceChecker(Long fromAccountId, Long amount);
+  boolean balanceChecker(Long fromAccountId, Long amount);
 
-    boolean checkCurrencyOfTwoAccounts(Long fromAccountId, Long toAccountId, Long transferId);
+  boolean checkCurrencyOfTwoAccounts(Long fromAccountId, Long toAccountId, Long transferId);
 
-    AccountEntity getAccountById(Long id);
+  AccountEntity getAccountById(Long id);
 
-    void debitAccount(Long fromAccount, Long amount);
+  void debitAccount(Long fromAccount, Long amount);
 
-    void creditAccount(Long toAccount, Long amount);
-    void setDailyLimit(Long fromAccount, Long amount);
+  void creditAccount(Long toAccount, Long amount);
 
-    void rollBackAccount(Long fromAccount, Long amount);
+  void setDailyLimit(Long fromAccount, Long amount);
+
+  void rollBackAccount(Long fromAccount, Long amount);
 }

@@ -10,18 +10,18 @@ import uz.kapitalbank.pg.payflow.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class UserDetails implements org.springframework.security.core.userdetails.UserDetailsService {
 
-    UserRepository userRepository;
+  UserRepository userRepository;
 
-    @Override
-    public org.springframework.security.core.userdetails.UserDetails loadUserByUsername(String passportNumber) throws UsernameNotFoundException {
-        var user = userRepository.findByPassportNumber(passportNumber)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + passportNumber));
+  @Override
+  public org.springframework.security.core.userdetails.UserDetails loadUserByUsername(String passportNumber) throws UsernameNotFoundException {
+    var user = userRepository.findByPassportNumber(passportNumber)
+      .orElseThrow(() -> new UsernameNotFoundException("User not found: " + passportNumber));
 
-        return User.withUsername(user.getPassportNumber())
-                .password(user.getPassword())
-                .build();
-    }
+    return User.withUsername(user.getPassportNumber())
+      .password(user.getPassword())
+      .build();
+  }
 }

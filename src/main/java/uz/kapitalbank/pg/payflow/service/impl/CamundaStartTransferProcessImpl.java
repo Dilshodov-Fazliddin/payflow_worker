@@ -32,15 +32,15 @@ public class CamundaStartTransferProcessImpl implements CamundaStartTransferProc
   @Override
   public StartTransferResponse startTransfer(TransferToProcess request) {
     Map<String, Object> variables = new HashMap<>();
-    variables.put(FROM_ACCOUNT,       camundaVar(request.getFromAccount(),     "Long"));
-    variables.put(TO_ACCOUNT,         camundaVar(request.getToAccount(),       "Long"));
-    variables.put(AMOUNT,             camundaVar(request.getAmount(),          "Long"));
-    variables.put(TRANSFER_ID,        camundaVar(request.getTransferId(),      "Long"));
-    variables.put(FRAUD_CHECK_PASSED, camundaVar(request.getFraudCheckPassed(),"Boolean"));
+    variables.put(FROM_ACCOUNT, camundaVar(request.getFromAccount(), "Long"));
+    variables.put(TO_ACCOUNT, camundaVar(request.getToAccount(), "Long"));
+    variables.put(AMOUNT, camundaVar(request.getAmount(), "Long"));
+    variables.put(TRANSFER_ID, camundaVar(request.getTransferId(), "Long"));
+    variables.put(FRAUD_CHECK_PASSED, camundaVar(request.getFraudCheckPassed(), "Boolean"));
 
 
     Map<String, Object> body = Map.of(
-      "variables",   variables,
+      "variables", variables,
       "businessKey", String.valueOf(request.getTransferId())
     );
 
