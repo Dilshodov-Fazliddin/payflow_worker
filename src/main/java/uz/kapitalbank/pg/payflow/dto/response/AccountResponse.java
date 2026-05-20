@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountResponse {
-
     Long id;
     Long balance;
     Currency currency;

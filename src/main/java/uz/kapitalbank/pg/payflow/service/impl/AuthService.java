@@ -17,6 +17,7 @@ import uz.kapitalbank.pg.payflow.dto.response.AuthResponse;
 import uz.kapitalbank.pg.payflow.entity.UserEntity;
 import uz.kapitalbank.pg.payflow.exception.ApplicationException;
 import uz.kapitalbank.pg.payflow.jwt.JwtService;
+import uz.kapitalbank.pg.payflow.mapper.UserMapper;
 import uz.kapitalbank.pg.payflow.repository.UserRepository;
 
 import static uz.kapitalbank.pg.payflow.constant.error.Error.INTERNAL_SERVICE_ERROR_CODE;
@@ -32,7 +33,7 @@ public class AuthService {
     JwtService jwtService;
     AuthenticationManager authenticationManager;
     UserDetailsService userDetailsService;
-
+    UserMapper userMapper;
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getPassportNumber(), request.getPassword())
@@ -44,7 +45,7 @@ public class AuthService {
 
     public AuthResponse register(UserCreateRequest request) {
         userExistCheck(request.getPassportNumber());
-        UserEntity user = buildUser(request);
+        UserEntity user = userMapper.toEntity(request);
         userRepository.save(user);
         var userDetails = userDetailsService.loadUserByUsername(user.getPassportNumber());
         var token = jwtService.generateToken(userDetails);
@@ -59,16 +60,6 @@ public class AuthService {
                 .build();
     }
 
-
-    public UserEntity buildUser(UserCreateRequest request){
-        return UserEntity.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .passportNumber(request.getPassportNumber())
-                .age(request.getAge())
-                .build();
-    }
 
     public void userExistCheck(String passportNumber){
         if (userRepository.existsByPassportNumber(passportNumber)) {
