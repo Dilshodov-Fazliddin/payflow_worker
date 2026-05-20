@@ -20,7 +20,11 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.*;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.AMOUNT;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.CHECK_FREQUENCY;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.FRAUD_CHECK_PASSED;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.FROM_ACCOUNT;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.TRANSFER_ID;
 
 @Component
 @ExternalTaskSubscription(
@@ -35,6 +39,7 @@ public class CheckTransferFrequencyWorker implements ExternalTaskHandler {
 
   FraudCheckService fraudCheckService;
   TransferService transferService;
+
   @Override
   public void execute(ExternalTaskBuilder task, ExternalTaskService taskService) {
     MDC.put("processInstanceId", task.getProcessInstanceId());
@@ -50,8 +55,8 @@ public class CheckTransferFrequencyWorker implements ExternalTaskHandler {
 
       taskService.complete(task, Map.of(
         FRAUD_CHECK_PASSED, result.getDecision().equals(FraudDecision.APPROVED),
-        "fraudDecision",        result.getDecision().name(),
-        "fraudReason",          result.getReason(),
+        "fraudDecision", result.getDecision().name(),
+        "fraudReason", result.getReason(),
         "recentTransferCounts", result.getRecentCount(),
         "fraudPassed", true
       ));

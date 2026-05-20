@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants;
@@ -19,7 +18,9 @@ import uz.kapitalbank.pg.payflow.service.TransferService;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.*;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.AMOUNT;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.CHECK_DAILY_LIMIT_TOPIC;
+import static uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants.FROM_ACCOUNT;
 
 @Component
 @ExternalTaskSubscription(
