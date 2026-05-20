@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import uz.kapitalbank.pg.payflow.camunda.constant.CamundaConstants;
 import uz.kapitalbank.pg.payflow.constant.enums.FraudDecision;
 import uz.kapitalbank.pg.payflow.dto.response.FraudCheckResult;
 import uz.kapitalbank.pg.payflow.myclient.builder.ExternalTaskBuilder;

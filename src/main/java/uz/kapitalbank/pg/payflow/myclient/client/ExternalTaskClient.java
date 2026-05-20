@@ -139,7 +139,7 @@ public class ExternalTaskClient {
     HttpRequest req = HttpRequest.newBuilder()
       .uri(URI.create(baseUrl + "/external-task/fetchAndLock"))
       .header("Content-Type", "application/json")
-      .header("Authorization", authHeader)          // <-- вот это
+      .header("Authorization", authHeader)
       .timeout(Duration.ofMillis(asyncResponseTimeout + 5000))
       .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
       .build();
