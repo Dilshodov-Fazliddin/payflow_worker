@@ -45,7 +45,7 @@ public class AuthService {
 
     public AuthResponse register(UserCreateRequest request) {
         userExistCheck(request.getPassportNumber());
-        UserEntity user = userMapper.toEntity(request);
+        UserEntity user = buildUser(request);
         userRepository.save(user);
         var userDetails = userDetailsService.loadUserByUsername(user.getPassportNumber());
         var token = jwtService.generateToken(userDetails);
@@ -60,6 +60,16 @@ public class AuthService {
                 .build();
     }
 
+
+    public UserEntity buildUser(UserCreateRequest request){
+        return UserEntity.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .passportNumber(request.getPassportNumber())
+                .age(request.getAge())
+                .build();
+    }
 
     public void userExistCheck(String passportNumber){
         if (userRepository.existsByPassportNumber(passportNumber)) {
